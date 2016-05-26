@@ -1601,17 +1601,17 @@ The five distinct transfer functions of interest are shown in the matrix below:
 \begin{equation}
 	\renewcommand\arraystretch{0.8}
 	\begin{bmatrix} y \\ u \end{bmatrix} =
-	\begin{pmatrix} S_o G & S_o & -To \\ T_i & K S_o & K S_o \end{pmatrix}
+	\begin{pmatrix} S_o G & S_o & -To \\ S_i & S_i K & S_i K \end{pmatrix}
 	\begin{bmatrix} d_u \\ d_y \\ n \end{bmatrix}
 \end{equation}
-where $S_o = (I + G K)^{-1}$ is the output sensitivity, $T_o = (I + G K)^{-1} G K = S_o G K$ is the output complementary sensitivity, and $T_i = (I + K G)^{-1} K G$ is the input complementary sensitivity.
+where $S_o = (I + G K)^{-1}$ is the output sensitivity, $T_o = (I + G K)^{-1} G K = S_o G K$ is the output complementary sensitivity, and $S_i = (I + K G)^{-1}$ is the input sensitivity.
 
-The output sensitivity is of particular importance since it is a factor in most of these transfer functions.
-We choose the upper bound of $S_o$ such as to guarantee a bandwidth of 30\,Hz and a maximum peak of 1.9 (which guarantees a stability margin of 0.53).
+The sensitivity (both input and output) is of particular importance since it is a factor in most of these transfer functions (note that $S_o G = G S_i$ and $S_i K = K S_o$).
+For both $S_o$ and $S_i$, we choose the upper bound such as to guarantee a bandwidth of 25\,Hz and a maximum peak of 1.9 (which guarantees a stability margin of 0.53).
 In the control literature, a maximum peak sensitivity of 2 or less is considered good for most intents and purposes.
-We also want the output (respectively input) complimentary sensitivity to start rolling off at 200\,Hz maximum, have a maximum 20\% (respectively 30\%) amplification at low frequencies.
+We also want the output complimentary sensitivity to start rolling off at 200\,Hz maximum, have a maximum 20\% amplification at low frequencies.
 We want $S_o G$ to roll-off at no more than 50\,Hz and have at least a 14\,dB attenuation.
-To limit actuator use, we want $K S_o$ to have a bandwidth of at least 10\,Hz and no more than 40\,dB amplification.
+To limit actuator use, we want $S_i K$ to have a bandwidth of at least 10\,Hz and no more than 40\,dB amplification.
 All the bounds can be seen on Figure~\ref{fig:example_robust_performance}.
 
 Next we want to introduce perturbations in our system.
@@ -1729,9 +1729,9 @@ We verify that our controller has robust performance for the set of perturbed pl
 	%\centering
 	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_So}%
 	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_To}
-	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_Ti}%
+	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_Si}%
 	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_SoG}
-	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_KSo}
+	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_SiK}
 	\caption{Robust performance.
 		The singular values of the transfer functions of 256 perturbed plants are shown superimposed in blue.
 		All perturbed transfer functions meet the performance specifications indicated by their upper bound in red.}
@@ -3965,17 +3965,17 @@ The five distinct transfer functions of interest are shown in the matrix below:
 \begin{equation}
 	\renewcommand\arraystretch{0.8}
 	\begin{bmatrix} y \\ u \end{bmatrix} =
-	\begin{pmatrix} S_o G & S_o & -To \\ T_i & K S_o & K S_o \end{pmatrix}
+	\begin{pmatrix} S_o G & S_o & -To \\ S_i & S_i K & S_i K \end{pmatrix}
 	\begin{bmatrix} d_u \\ d_y \\ n \end{bmatrix}
 \end{equation}
-where $S_o = (I + G K)^{-1}$ is the output sensitivity, $T_o = (I + G K)^{-1} G K = S_o G K$ is the output complementary sensitivity, and $T_i = (I + K G)^{-1} K G$ is the input complementary sensitivity.
+where $S_o = (I + G K)^{-1}$ is the output sensitivity, $T_o = (I + G K)^{-1} G K = S_o G K$ is the output complementary sensitivity, and $S_i = (I + K G)^{-1}$ is the input sensitivity.
 
-The output sensitivity is of particular importance since it is a factor in most of these transfer functions.
-We choose the upper bound of $S_o$ such as to guarantee a bandwidth of 30\,Hz and a maximum peak of 1.9 (which guarantees a stability margin of 0.53).
+The sensitivity (both input and output) is of particular importance since it is a factor in most of these transfer functions (note that $S_o G = G S_i$ and $S_i K = K S_o$).
+For both $S_o$ and $S_i$, we choose the upper bound such as to guarantee a bandwidth of 25\,Hz and a maximum peak of 1.9 (which guarantees a stability margin of 0.53).
 In the control literature, a maximum peak sensitivity of 2 or less is considered good for most intents and purposes.
-We also want the output (respectively input) complimentary sensitivity to start rolling off at 200\,Hz maximum, have a maximum 20\% (respectively 30\%) amplification at low frequencies.
+We also want the output complimentary sensitivity to start rolling off at 200\,Hz maximum, have a maximum 20\% amplification at low frequencies.
 We want $S_o G$ to roll-off at no more than 50\,Hz and have at least a 14\,dB attenuation.
-To limit actuator use, we want $K S_o$ to have a bandwidth of at least 10\,Hz and no more than 40\,dB amplification.
+To limit actuator use, we want $S_i K$ to have a bandwidth of at least 10\,Hz and no more than 40\,dB amplification.
 All the bounds can be seen on Figure~\ref{fig:robust_performance}.
 
 Next we want to introduce perturbations in our system.
@@ -4101,9 +4101,9 @@ We verify that our controller has robust performance for the set of perturbed pl
 	%\centering
 	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_So}%
 	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_To}
-	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_Ti}%
+	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_Si}%
 	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_SoG}
-	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_KSo}
+	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_SiK}
 	\caption{Robust performance.
 		The singular values of the transfer functions of 256 perturbed plants are shown superimposed in blue.
 		All perturbed transfer functions meet the performance specifications indicated by their upper bound in red.}
