@@ -328,8 +328,18 @@ To optimally use the space and to ensure good stabilization in large highly elon
 Three major approaches to plasma shape control have been shown: shape global parameter control \cite{Kessel90} , magnetic flux control \cite{Hofmann90, Jhang01} and gap control \cite{Villone97, Albanese03}. 
 
 
+\subsection{{Rotation control}} 
+Toroidal rotation impacts a variety of important plasmas physics topics. Mainly it contributes to both stability and confinement in tokamak plasmas. The confinement in a tokamak is governed by the radial transport of energy from the plasma center to the plasma edge and large part of this transport is driven by turbulence, which is substantially reduced by rotational shear. 
+
+Plasma toroidal rotation, or its shear, has been recognized as a stabilizing mechanism for magnetohydrodynamic (MHD)
+instabilities such as the neoclassical tearing mode (NTM) \cite{LaHaye10} where a reduced plasma rotation experimentally destabilizes these NTMs at Lower Beta in DIII-D, NSTX and JET devices. It also helps prevent the resistive wall modes (RWM) \cite{Garofalo02} where these long-wavelength modes are stabilized by the resistive wall and rapid plasma toroidal rotation.
+
+Toroidal rotation Profile Control for the DIII-D Tokamak have been studied in...
+
 
 \section{Contribution of this dissertation}
+
+
 The main subject of this thesis is to explore {\bf{toroidal rotation control}}  in tokamaks through its direct application on NSTX and NSTX-U devices. 
 The methodology used throughout the thesis relies heavily on the mechanical engineering tools that are very commonly used in fluid mechanics and flow control such as model reduction and linear feedback controllers. The idea here is to transpose this knowledge and tools and apply them to control the toroidal rotation of plasma in tokamaks. 
 
@@ -346,6 +356,32 @@ Finally, a study of the robustness of our controller to some parameters uncertai
 
 
 
+
+
+If model
+simplicity is preferred over model accuracy and range of
+validity, data-driven modeling techniques, including system
+identification [5] and data assimilation [6], emerge as an
+alternative to first-principles modeling and have the potential
+to obtain low-complexity, linear, dynamic models useful for
+the design of local regulators around an equilibrium
+
+Data-driven modeling techniques have been successfully
+used in the past to model plasma transport dynamics for
+active control design in nuclear fusion reactors [7]. System
+identification using input/output data has been used to model
+the current profile dynamics in ASDEX Upgrade [8]. In
+the JET tokamak [9], a two-time-scale linear model has
+been used to describe the dynamics of the magnetic and
+kinetic profiles around certain quasi-steady-state trajectories,
+where system matrices can be identified from experimental
+data. In low confinement (L-mode) discharges of the JT-60U
+tokamak [10], diffusive and non-diffusive coefficients of the
+momentum transport equation of the toroidal rotation profile
+dynamics have been estimated from transient data obtained
+by modulating the momentum source.
+
+
 \section{Organization of Part I}
 
 {\bf{Chapter 2 and 3:}} We will present and explain all the background and  the tools used in this thesis for the model reduction and the controller design. This will include the balanced truncation and the Bessel functions decomposition for the reduced-order modeling and the different controller designs such as model-based feedback control design, the observer control design and the robust control study. The same methodology consisting of doing a model reduction then building a matching controller, will be applied to all our various problems.
@@ -358,7 +394,7 @@ It uses experimental measurements from the NSTX device but will extend the appro
 {\bf{Chapter 6:}} We summarize our results and possible future directions for this research.
 
 
-\chapter{Reduced-order modeling for linear time invariant systems}
+\chapter{Background: Reduced-order modeling  and feedback control for linear time invariant systems}
 \label{chapitre2}
 
 \section{Overview and motivation}
@@ -542,14 +578,14 @@ G(s) = G_u(s)+ G_{s \, r}(s).
 \end{equation}
 
 
-\section{Methods for very high dimensional systems}
+\subsection{Methods for very high dimensional systems}
 \label{highdim}
 
 The fluid mechanics community has been precursor in developing very high dimensional reduced-order modeling methods due to the extremely high state sizes needed for the conversion of partial differential equations to ordinary differential equations: modeling flows of fluids requires state sizes of the order of $10^{\, 6-9}$. Very high-dimensional model reduction is a current field of study and ongoing research. 
 
 This section  briefly describes proper orthogonal decomposition (POD), balanced POD, and the eigensystem realization algorithm (ERA), which became very standard techniques. The methods have not been used in this thesis but are given as examples of what can be done and complete the overview of the main existing high dimension model reduction tools.
 
-\subsection{The Proper Orthogonal Decomposition (POD)}
+\subsubsection{The Proper Orthogonal Decomposition (POD)}
 Proper Orthogonal Decomposition or POD also known as the principal component analysis or Karhunen-Loève analysis, has been first used in fluids problems by Lumley \cite{Lumley67, Lumley70}, then has been used widely to study fluid flows, model reduction and control \cite{Sirovich87, Aubry88, Holmes96}. 
 
 This method can be applied on both linear and nonlinear systems. It constructs an orthogonal set of modes called POD modes directly from experimental data. The POD model reduction consists of an orthogonal Galerkin projection onto the first $r$ leading modes (modes ranked by their intrinsic energy content). 
@@ -559,7 +595,7 @@ The POD modes are deduced to be the orthonormal eigenvectors of $X^{\dagger}X \i
 
 It does not capture the input-output dynamics of the original model as the balanced truncation does, and this is the major drawback as the most important modes for control or measurements are not necessarily the most energetic \cite{Smith05, Ilak08}. Another drawback is that reduced order modeling using POD does not conserve stability for stable linear systems \cite{Smith03}
 
-\subsection{The balanced POD}
+\subsubsection{The balanced POD}
 Another snapshot-based method was introduced by Rowley \cite{Rowley05} for high dimensional LTI systems with high dimensional inputs and outputs, and it approximates the balanced truncation method developed in subsection \ref{baltrun}.
 
 The BPOD algorithm requires an impulse response of the linear dynamics for each actuator, and an impulse response of the adjoint dynamics for each sensor. (If the number of sensors is large, then a method known as output projection can approximate this process with a smaller number of impulse responses.) 
@@ -570,7 +606,7 @@ Tu \cite{Tu12} improved the numerical algorithm by using predictive techniques t
 
 The main drawback of this method  as well as the balanced truncation method is that it relies on adjoints data that in experimental situation cannot be obtained. If we have a model defined, an adjoint system can be easily deduced, but if we want to rely on experimental snapshots, then these methods are limited and unapplicable. 
 
-\subsection{ERA}
+\subsubsection{ERA}
 
 The eigensystem realization algorithm (ERA) method is analytically equivalent to the balanced POD \cite{Ma11}, but has the advantage that it does not require adjoint impulse responses. Therefore, unlike balanced POD, it is theoretically possible to use ERA on experimental impulse response data to approximate balanced truncation. Furthermore ERA can be less computationally expensive than balanced POD \cite{Ma11}. 
 
@@ -579,10 +615,8 @@ The resulting drawback of the ERA method is thus that ERA does not compute the a
 However, both the balanced POD and ERA techniques remain a better choice than the POD method when the dynamics are linear or nearly linear.
 
 
-\chapter{Feedback control theory}
-\label{chapitre3}
+\section{Optimal feedback control tools}
 
-\section{Overview}
 The development of engineering tools and strategies for automatic regulation and control of a system's behavior began in the 18th century and never stopped progressing especially in the last several decades.
 
 As mentioned previously, this work will only focus specifically on linear time invariant (LTI) control theory, where we assume that plants (i.e., systems to be controlled) and controllers have linear dynamics that do not change with time. Although the LTI assumption is restrictive, the control theory tools specific to it are very standard and easy to apply. 
@@ -625,7 +659,6 @@ The early studies about feedback control theory were done in the domain of fluid
 This chapter focuses on particular modern control concepts that have been used throughout this thesis. In particular, this chapter addresses optimal control and robust control methods and analysis. The robustness discussion will be particularly important for the real-time implementation of feedback control since closed-loop control systems must be able to maintain stability and performance even in the presence of modeling errors and other external perturbations.
  
 
-\section{Optimal control tools}
 
 The main idea of optimal control for LTI systems is to design a controller $K$ that will achieve the best control performance for a given set of performance constraints.
 
@@ -824,211 +857,211 @@ Figure~\ref{fig:model13} shows the schematic of the overall controller, combinin
 
 
 
-\section{Robust control tools}
-
-Although the closed-loop systems we obtain using the methods described above are stable in theory, multiple factors could make them unstable in practice, or adversely affect their performance.
-The models on which they are based might be inaccurate, some elements of the dynamics might be missing, or some of the parameters might be off.
-All these inaccuracies are referred as \emph{model uncertainty}.
-Fortunately it is possible to precisely describe this uncertainty, put proper bounds on it, and guarantee that our closed-loop systems stay stable and meet all performance specifications in spite of it. More details can be found in~\cite{SandP}.
-
-In this section, we show how to represent system uncertainty resulting from parameter uncertainty and we give conditions for robust stability and performance.
-We describe robustness analysis for systems with a single input and a single output (SISO) first, then for systems with multiple inputs and multiple outputs (MIMO) which will be our practical case in this disertation.
-
-\subsection{Uncertainty and robustness for SISO systems}
-
-Let $G$ be the model representing the system that we want to control.
-We call it the \textbf{nominal model} and we use it to design a controller.
-Because of various uncertainties, or the desire to keep model complexity low (e.g., linearization, model reduction), it is possible that $G$ is not a very accurate representation of the actual underlying system and that the controller we designed would either be unstable or have poor performance when applied to the actual system.
-The actual system can be seen as a perturbed version $G_p$ of our nominal model $G$.
-However, we do not know exactly where $G_p$ lies compared to $G$ but we can be conservative and make our controller robust to any bounded perturbation with sufficiently large bounds to make sure that the set $\Pi$ of all perturbed models contains $G_p$.
-We say that robust stability (resp. performance) is obtained when all plants in $\Pi$ are stable (resp. performant).
-
-One way to put bounds on the perturbations is to rely on parametric uncertainty.
-It is often the case that instead of a precise value, we only know a range of possible values for some parameters in our systems.
-We can use this structured information to compute analytical bounds on the perturbations of the model.
-
-To greatly simplify the analysis while being strictly conservative about stability and performance, we can use a \emph{norm-bounded} description of uncertainty where $\Pi$ is allowed to contain $\mathcal{H}_\infty$ norm-bounded perturbations of our nominal model $G$.
-There are different ways to integrate this uncertainty into a model but one can get intuition on which one to use by observing the patterns obtained by superimposing the Nyquist plots of many perturbed models.
-Here we will only describe multiplicative uncertainty which is one of the most common.
-The perturbed model can be written as
-\begin{equation} \label{eq:multiplicative}
-	G_p = G (1 + \Delta W),
-\end{equation}
-where $W$ is a weighting transfer function, and $\Delta$ is a transfer function satisfying $\|\Delta\|_\infty < 1$.
-A block diagram of the perturbed plant is shown in Figure~\ref{fig:example_multiplicative}.
-
-\begin{figure}[htbp]
-	\centering
-	\begin{tikzpicture}
-		\node (u) {$u$};
-		\node[junction, right=0.5 of u] (in) {};
-		\node[coordinate, right=1 of in] (below Delta) {};
-		\node[block, above=0.5 of below Delta] (Delta) {$\Delta$};
-		\node[coordinate, right=1.7 of below Delta] (below W) {};
-		\node[block, above=0.5 of below W] (W) {$W$};
-		\node[sum, right=0.9 of below W] (sum) {};
-		\node[block, right=0.5 of sum] (G) {$G$};
-		\node[right=0.5 of G] (y) {$y$};
-		
-		\draw[connector] (u) to (in) to (sum);
-		\draw[connector] (sum) to (G);
-		\draw[connector] (in) |- (Delta);
-		\draw[connector] (Delta) to (W);
-		\draw[connector] (W) -| (sum);
-		\draw[connector] (G) to (y);
-	\end{tikzpicture}
-	\caption{Perturbed model $G_p = G (1 + \Delta W)$}
-	\label{fig:example_multiplicative}
-\end{figure}
-
-To find $W$, we first observe that $\Delta W = {G_p}/{G} - 1$.
-Thus we can superimpose the Bode plots of ${G_p}/{G} - 1$ for many perturbed plants and choose a low-order upper bound which will be our $W$.
-
-Next we want to check robust stability. Using the Nyquist criterion we require that for any perturbed model $G_p$, the corresponding loop gain $L_p$ should not encircle the -1 point. 
-This translates to the condition
-\begin{equation}
-	\| W T \|_\infty < 1,
-\end{equation}
-where $T = \frac{L}{1 + L}$ is the complementary sensitivity function.
-
-Finally we want to check robust performance. We simply require that for any perturbed model $G_p$, a certain performance criterion is satisfied.
-The performance criterion is a set of constraints on the sensitivity function $S = \frac{1}{1 + L}$.
-For instance one can specify a minimum bandwidth, which relates to the speed of the response but also the sensitivity to noise, or an upper bound on peaks values which relates to stability margins.
-These specifications are encoded in a weight $W_P$ (where $P$ stands for \emph{performance}, whereas $p$ stands for \emph{perturbed}).
-The condition translates to
-\begin{equation}
-	\max_\omega(| W_P S | + | W T |) < 1.
-\end{equation}
-
-\subsection{Robust Stability and performance analysis for MIMO systems}
-
-The robustness analysis for multiple inputs and multiple outputs (MIMO) systems is very similar but slightly more complex than for SISO systems. In a MIMO system, each input may influence any or all outputs and each output may be influenced by any or all inputs.
-
-A first complication of working with a MIMO system is that all transfer functions are now matrices and as such, multiplication is no longer commutative.
-One consequence is that common SISO transfer functions like the loop gain, the sensitivity, and the complementary sensitivity exist in two variants: input or output depending of the order of multiplication.
-Also, looking at one bode plot per input-output pair can quickly become unwieldy, so instead it is often convenient to look at Bode plots of the singular values of a transfer function matrix.
-Furthermore, upper bounds for robustness and performance are often expressed in terms of the largest singular value $\bar\sigma(H)$ for a transfer function matrix $H$.
-
-% Nominal Stability
-
-Before introducing uncertainty, the first step is to verify that the closed-loop nominal system is stable and define performance specifications.
-For the nominal stability, one can inspect the open loop poles and the Nyquist plot of the system and use the Nyquist criterion to conclude.
-
-% Nominal Performance
-
-Performance is a trade-off between getting a fast response (for instance while tracking the reference signal for a tracking problem) and making sure that measurement noise and other disturbances are not amplified too much by the feedback loop.
-Fortunately, these disturbances enter the system at different points in the loop and sometimes at different frequencies than the reference signal.
-
-We define nominal performance by choosing upper bounds on the transfer functions from these disturbance inputs (sometimes called exogenous outputs) to various points in the feedback loop, typically to the output $y$ and to the input $u$.
-There are two important aspects to consider when choosing the bounds.
-The \emph{static} aspect is given by the \emph{peaks} (maximum values) which are related to the quality of the response.
-The \emph{dynamic} aspect is given by the \emph{bandwidth frequency} which is related to the speed of the response.
-In general, a large bandwidth means better performance since high frequency signals are more easily passed on to the outputs, so the rise time is improved, but it also indicates a system which is sensitive to noise and model uncertainties.
-
-In a MIMO system, typical transfer functions of interest include the input and output sensitivities $S_i$ and $S_o$, the input and output complementary sensitivities $T_i$ and $T_o$, and combinations of the sensitivities with the system $G$ and the controller $K$.
-
-% Uncertainty modeling
-
-As in the previous section, we introduce parametric uncertainty which we translate into multiplicative uncertainty.
-In this example, we use right multiplicative uncertainty, as opposed to left (or inverse) multiplicative uncertainty, since the order of multiplications matters.
-The perturbed plant $G_p$ can be written as
-\begin{equation} \label{eq:multiplicative_MIMO}
-	G_p = G (I + W_1 \Delta W_2),
-\end{equation}
-where $W_1$ and $W_2$ are weighting transfer function matrices, and $\Delta$ satisfies $\|\Delta\|_\infty < 1$.
-For simplicity, $W_1$ is often taken to be the identity matrix.
-A block diagram of the perturbed plant is shown on Figure~\ref{fig:example_perturbed_MIMO}.
-
-\begin{figure}[htbp]
-	\centering
-	\begin{tikzpicture}
-		\node (u) {$u$};
-		\node[junction, right=0.5 of u] (in) {};
-		\node[coordinate, right=1 of in] (below W2) {};
-		\node[block, above=0.5 of below W2] (W2) {$W_2$};
-		\node[coordinate, right=1.7 of below W2] (below Delta) {};
-		\node[block, above=0.5 of below Delta] (Delta) {$\Delta$};
-		\node[coordinate, right=1.7 of below Delta] (below W1) {};
-		\node[block, above=0.5 of below W1] (W1) {$W_1$};
-		\node[sum, right=0.9 of below W1] (sum) {};
-		\node[block, right=0.5 of sum] (G) {$G$};
-		\node[right=0.5 of G] (y) {$y$};
-		
-		\draw[connector] (u) to (in) to (sum);
-		\draw[connector] (sum) to (G);
-		\draw[connector] (in) |- (W2);
-		\draw[connector] (W2) to (Delta);
-		\draw[connector] (Delta) to (W1);
-		\draw[connector] (W1) -| (sum);
-		\draw[connector] (G) to (y);
-	\end{tikzpicture}
-
-	\caption{Perturbed model $G_p = G (I + W_1 \Delta W_2)$}
-	\label{fig:example_perturbed_MIMO}
-\end{figure}
-
-To find $W_2$ (we assume that $W_1 = I$), we proceed exactly as in the previous section, except that $W_2$, $G$ and $G_p$ are now matrices so we must find upper bounds for each element of the $G^{-1}{G_p} - I$ matrix.
-
-% Robust stability
-
-Now equipped with a mathematical description of our perturbed system, we can address robust stability.
-For stability we only need to consider the feedback loop. Exogenous inputs are only relevant for performance.
-It is always possible using block diagram algebra to rearrange a system to put it in the $M \Delta$ configuration as shown in \ref{fig:example_diagram_perturb}.
-Once we know $M$, the condition for robust stability is simply:
-\begin{equation}
-	\| M \|_\infty < 1.
-\end{equation}
-
-\begin{figure}
-	\centering
-	\begin{tikzpicture}
-		\node[font=\large\bfseries] at (-0.25,1.25) {a)};
-		\path (0,1.25) -- ++(down:2.75);
-
-		\node[sum] (sum) {};
-		\node[junction, right=0.5 of sum] (in) {};
-		\node[coordinate, right=of in] (below W2) {};
-		\node[block, above=0.4 of below W2] (W2) {$W_2$};
-		\node[coordinate, right=2 of below W2] (below Delta) {};
-		\node[block, above=0.4 of below Delta] (Delta) {$\Delta$};
-		\node[coordinate, right=2 of below Delta] (below W1) {};
-		\node[block, above=0.4 of below W1] (W1) {$W_1$};
-		\node[sum, right=of below W1] (out) {};
-		\node[block, right=0.5 of out] (G) {$G$};
-		\node[coordinate, right=0.5 of G] (end) {};
-		\node[coordinate] (above K) at ($(sum)!0.5!(end)$) {};
-		\node[block, below=0.6 of above K] (K) {$K$};
-		
-		\draw[connector] (sum) to (in) to (below W2) to (below Delta) to (below W1) to (out) to (G);
-		\draw[connector] (G) to (end) |- (K);
-		\draw[connector] (K) -| node[right, pos=0.98] {$\scriptstyle -$} (sum);
-		
-		\draw[connector] (in) |- (W2);
-		\draw[connector] (W2) to node[above] {$u_\Delta$} (Delta);
-		\draw[connector] (Delta) to node[above] {$y_\Delta$} (W1);
-		\draw[connector] (W1) -| (out);
-	\end{tikzpicture}
-	\begin{tikzpicture}
-		\node[font=\large\bfseries] at (-2,0.5) {b)};
-		\path (0,0.5) -- ++(down:2.75);
-		
-		\node[block] (Delta) {$\Delta$};
-		\node[block, below=0.5 of Delta] (M) {$M$};
-		
-		\node[coord, right=0.6 of M] (right) {};
-		\node[coord, left=0.6 of M] (left) {};
-		
-		\draw[connector] (M.east) to (right |- M) to node[right] {$y_\Delta$} (right |- Delta) to (Delta);
-		\draw[connector] (Delta) to (left |- Delta) to node[left] {$u_\Delta$} (left |- M) to (M);
-	\end{tikzpicture}
-
-	\caption{Block diagrams of the loop of the perturbed closed-loop system stripped of all exogenous inputs and outputs. \textbf{a)} Expanded system. \textbf{d)} $M \Delta$ structure for robust stability analysis.}
-	\label{fig:example_diagram_perturb}
-\end{figure}
-
-
-However there is no simple analytical method for asserting robust performance for MIMO systems so we will have to resort to numerical methods \emph{\`a la Monte Carlo}.
-One simple way to test for robust performance is to generate many perturbed plants and check that each one of them satisfies the performance specifications by superimposing the Bode plots of the singular values of the perturbed plants. More details on the topic can be found in \cite{SandP}
+%\section{Robust control tools}
+%
+%Although the closed-loop systems we obtain using the methods described above are stable in theory, multiple factors could make them unstable in practice, or adversely affect their performance.
+%The models on which they are based might be inaccurate, some elements of the dynamics might be missing, or some of the parameters might be off.
+%All these inaccuracies are referred as \emph{model uncertainty}.
+%Fortunately it is possible to precisely describe this uncertainty, put proper bounds on it, and guarantee that our closed-loop systems stay stable and meet all performance specifications in spite of it. More details can be found in~\cite{SandP}.
+%
+%In this section, we show how to represent system uncertainty resulting from parameter uncertainty and we give conditions for robust stability and performance.
+%We describe robustness analysis for systems with a single input and a single output (SISO) first, then for systems with multiple inputs and multiple outputs (MIMO) which will be our practical case in this disertation.
+%
+%\subsection{Uncertainty and robustness for SISO systems}
+%
+%Let $G$ be the model representing the system that we want to control.
+%We call it the \textbf{nominal model} and we use it to design a controller.
+%Because of various uncertainties, or the desire to keep model complexity low (e.g., linearization, model reduction), it is possible that $G$ is not a very accurate representation of the actual underlying system and that the controller we designed would either be unstable or have poor performance when applied to the actual system.
+%The actual system can be seen as a perturbed version $G_p$ of our nominal model $G$.
+%However, we do not know exactly where $G_p$ lies compared to $G$ but we can be conservative and make our controller robust to any bounded perturbation with sufficiently large bounds to make sure that the set $\Pi$ of all perturbed models contains $G_p$.
+%We say that robust stability (resp. performance) is obtained when all plants in $\Pi$ are stable (resp. performant).
+%
+%One way to put bounds on the perturbations is to rely on parametric uncertainty.
+%It is often the case that instead of a precise value, we only know a range of possible values for some parameters in our systems.
+%We can use this structured information to compute analytical bounds on the perturbations of the model.
+%
+%To greatly simplify the analysis while being strictly conservative about stability and performance, we can use a \emph{norm-bounded} description of uncertainty where $\Pi$ is allowed to contain $\mathcal{H}_\infty$ norm-bounded perturbations of our nominal model $G$.
+%There are different ways to integrate this uncertainty into a model but one can get intuition on which one to use by observing the patterns obtained by superimposing the Nyquist plots of many perturbed models.
+%Here we will only describe multiplicative uncertainty which is one of the most common.
+%The perturbed model can be written as
+%\begin{equation} \label{eq:multiplicative}
+%	G_p = G (1 + \Delta W),
+%\end{equation}
+%where $W$ is a weighting transfer function, and $\Delta$ is a transfer function satisfying $\|\Delta\|_\infty < 1$.
+%A block diagram of the perturbed plant is shown in Figure~\ref{fig:example_multiplicative}.
+%
+%\begin{figure}[htbp]
+%	\centering
+%	\begin{tikzpicture}
+%		\node (u) {$u$};
+%		\node[junction, right=0.5 of u] (in) {};
+%		\node[coordinate, right=1 of in] (below Delta) {};
+%		\node[block, above=0.5 of below Delta] (Delta) {$\Delta$};
+%		\node[coordinate, right=1.7 of below Delta] (below W) {};
+%		\node[block, above=0.5 of below W] (W) {$W$};
+%		\node[sum, right=0.9 of below W] (sum) {};
+%		\node[block, right=0.5 of sum] (G) {$G$};
+%		\node[right=0.5 of G] (y) {$y$};
+%		
+%		\draw[connector] (u) to (in) to (sum);
+%		\draw[connector] (sum) to (G);
+%		\draw[connector] (in) |- (Delta);
+%		\draw[connector] (Delta) to (W);
+%		\draw[connector] (W) -| (sum);
+%		\draw[connector] (G) to (y);
+%	\end{tikzpicture}
+%	\caption{Perturbed model $G_p = G (1 + \Delta W)$}
+%	\label{fig:example_multiplicative}
+%\end{figure}
+%
+%To find $W$, we first observe that $\Delta W = {G_p}/{G} - 1$.
+%Thus we can superimpose the Bode plots of ${G_p}/{G} - 1$ for many perturbed plants and choose a low-order upper bound which will be our $W$.
+%
+%Next we want to check robust stability. Using the Nyquist criterion we require that for any perturbed model $G_p$, the corresponding loop gain $L_p$ should not encircle the -1 point. 
+%This translates to the condition
+%\begin{equation}
+%	\| W T \|_\infty < 1,
+%\end{equation}
+%where $T = \frac{L}{1 + L}$ is the complementary sensitivity function.
+%
+%Finally we want to check robust performance. We simply require that for any perturbed model $G_p$, a certain performance criterion is satisfied.
+%The performance criterion is a set of constraints on the sensitivity function $S = \frac{1}{1 + L}$.
+%For instance one can specify a minimum bandwidth, which relates to the speed of the response but also the sensitivity to noise, or an upper bound on peaks values which relates to stability margins.
+%These specifications are encoded in a weight $W_P$ (where $P$ stands for \emph{performance}, whereas $p$ stands for \emph{perturbed}).
+%The condition translates to
+%\begin{equation}
+%	\max_\omega(| W_P S | + | W T |) < 1.
+%\end{equation}
+%
+%\subsection{Robust Stability and performance analysis for MIMO systems}
+%
+%The robustness analysis for multiple inputs and multiple outputs (MIMO) systems is very similar but slightly more complex than for SISO systems. In a MIMO system, each input may influence any or all outputs and each output may be influenced by any or all inputs.
+%
+%A first complication of working with a MIMO system is that all transfer functions are now matrices and as such, multiplication is no longer commutative.
+%One consequence is that common SISO transfer functions like the loop gain, the sensitivity, and the complementary sensitivity exist in two variants: input or output depending of the order of multiplication.
+%Also, looking at one bode plot per input-output pair can quickly become unwieldy, so instead it is often convenient to look at Bode plots of the singular values of a transfer function matrix.
+%Furthermore, upper bounds for robustness and performance are often expressed in terms of the largest singular value $\bar\sigma(H)$ for a transfer function matrix $H$.
+%
+%% Nominal Stability
+%
+%Before introducing uncertainty, the first step is to verify that the closed-loop nominal system is stable and define performance specifications.
+%For the nominal stability, one can inspect the open loop poles and the Nyquist plot of the system and use the Nyquist criterion to conclude.
+%
+%% Nominal Performance
+%
+%Performance is a trade-off between getting a fast response (for instance while tracking the reference signal for a tracking problem) and making sure that measurement noise and other disturbances are not amplified too much by the feedback loop.
+%Fortunately, these disturbances enter the system at different points in the loop and sometimes at different frequencies than the reference signal.
+%
+%We define nominal performance by choosing upper bounds on the transfer functions from these disturbance inputs (sometimes called exogenous outputs) to various points in the feedback loop, typically to the output $y$ and to the input $u$.
+%There are two important aspects to consider when choosing the bounds.
+%The \emph{static} aspect is given by the \emph{peaks} (maximum values) which are related to the quality of the response.
+%The \emph{dynamic} aspect is given by the \emph{bandwidth frequency} which is related to the speed of the response.
+%In general, a large bandwidth means better performance since high frequency signals are more easily passed on to the outputs, so the rise time is improved, but it also indicates a system which is sensitive to noise and model uncertainties.
+%
+%In a MIMO system, typical transfer functions of interest include the input and output sensitivities $S_i$ and $S_o$, the input and output complementary sensitivities $T_i$ and $T_o$, and combinations of the sensitivities with the system $G$ and the controller $K$.
+%
+%% Uncertainty modeling
+%
+%As in the previous section, we introduce parametric uncertainty which we translate into multiplicative uncertainty.
+%In this example, we use right multiplicative uncertainty, as opposed to left (or inverse) multiplicative uncertainty, since the order of multiplications matters.
+%The perturbed plant $G_p$ can be written as
+%\begin{equation} \label{eq:multiplicative_MIMO}
+%	G_p = G (I + W_1 \Delta W_2),
+%\end{equation}
+%where $W_1$ and $W_2$ are weighting transfer function matrices, and $\Delta$ satisfies $\|\Delta\|_\infty < 1$.
+%For simplicity, $W_1$ is often taken to be the identity matrix.
+%A block diagram of the perturbed plant is shown on Figure~\ref{fig:example_perturbed_MIMO}.
+%
+%\begin{figure}[htbp]
+%	\centering
+%	\begin{tikzpicture}
+%		\node (u) {$u$};
+%		\node[junction, right=0.5 of u] (in) {};
+%		\node[coordinate, right=1 of in] (below W2) {};
+%		\node[block, above=0.5 of below W2] (W2) {$W_2$};
+%		\node[coordinate, right=1.7 of below W2] (below Delta) {};
+%		\node[block, above=0.5 of below Delta] (Delta) {$\Delta$};
+%		\node[coordinate, right=1.7 of below Delta] (below W1) {};
+%		\node[block, above=0.5 of below W1] (W1) {$W_1$};
+%		\node[sum, right=0.9 of below W1] (sum) {};
+%		\node[block, right=0.5 of sum] (G) {$G$};
+%		\node[right=0.5 of G] (y) {$y$};
+%		
+%		\draw[connector] (u) to (in) to (sum);
+%		\draw[connector] (sum) to (G);
+%		\draw[connector] (in) |- (W2);
+%		\draw[connector] (W2) to (Delta);
+%		\draw[connector] (Delta) to (W1);
+%		\draw[connector] (W1) -| (sum);
+%		\draw[connector] (G) to (y);
+%	\end{tikzpicture}
+%
+%	\caption{Perturbed model $G_p = G (I + W_1 \Delta W_2)$}
+%	\label{fig:example_perturbed_MIMO}
+%\end{figure}
+%
+%To find $W_2$ (we assume that $W_1 = I$), we proceed exactly as in the previous section, except that $W_2$, $G$ and $G_p$ are now matrices so we must find upper bounds for each element of the $G^{-1}{G_p} - I$ matrix.
+%
+%% Robust stability
+%
+%Now equipped with a mathematical description of our perturbed system, we can address robust stability.
+%For stability we only need to consider the feedback loop. Exogenous inputs are only relevant for performance.
+%It is always possible using block diagram algebra to rearrange a system to put it in the $M \Delta$ configuration as shown in \ref{fig:example_diagram_perturb}.
+%Once we know $M$, the condition for robust stability is simply:
+%\begin{equation}
+%	\| M \|_\infty < 1.
+%\end{equation}
+%
+%\begin{figure}
+%	\centering
+%	\begin{tikzpicture}
+%		\node[font=\large\bfseries] at (-0.25,1.25) {a)};
+%		\path (0,1.25) -- ++(down:2.75);
+%
+%		\node[sum] (sum) {};
+%		\node[junction, right=0.5 of sum] (in) {};
+%		\node[coordinate, right=of in] (below W2) {};
+%		\node[block, above=0.4 of below W2] (W2) {$W_2$};
+%		\node[coordinate, right=2 of below W2] (below Delta) {};
+%		\node[block, above=0.4 of below Delta] (Delta) {$\Delta$};
+%		\node[coordinate, right=2 of below Delta] (below W1) {};
+%		\node[block, above=0.4 of below W1] (W1) {$W_1$};
+%		\node[sum, right=of below W1] (out) {};
+%		\node[block, right=0.5 of out] (G) {$G$};
+%		\node[coordinate, right=0.5 of G] (end) {};
+%		\node[coordinate] (above K) at ($(sum)!0.5!(end)$) {};
+%		\node[block, below=0.6 of above K] (K) {$K$};
+%		
+%		\draw[connector] (sum) to (in) to (below W2) to (below Delta) to (below W1) to (out) to (G);
+%		\draw[connector] (G) to (end) |- (K);
+%		\draw[connector] (K) -| node[right, pos=0.98] {$\scriptstyle -$} (sum);
+%		
+%		\draw[connector] (in) |- (W2);
+%		\draw[connector] (W2) to node[above] {$u_\Delta$} (Delta);
+%		\draw[connector] (Delta) to node[above] {$y_\Delta$} (W1);
+%		\draw[connector] (W1) -| (out);
+%	\end{tikzpicture}
+%	\begin{tikzpicture}
+%		\node[font=\large\bfseries] at (-2,0.5) {b)};
+%		\path (0,0.5) -- ++(down:2.75);
+%		
+%		\node[block] (Delta) {$\Delta$};
+%		\node[block, below=0.5 of Delta] (M) {$M$};
+%		
+%		\node[coord, right=0.6 of M] (right) {};
+%		\node[coord, left=0.6 of M] (left) {};
+%		
+%		\draw[connector] (M.east) to (right |- M) to node[right] {$y_\Delta$} (right |- Delta) to (Delta);
+%		\draw[connector] (Delta) to (left |- Delta) to node[left] {$u_\Delta$} (left |- M) to (M);
+%	\end{tikzpicture}
+%
+%	\caption{Block diagrams of the loop of the perturbed closed-loop system stripped of all exogenous inputs and outputs. \textbf{a)} Expanded system. \textbf{d)} $M \Delta$ structure for robust stability analysis.}
+%	\label{fig:example_diagram_perturb}
+%\end{figure}
+%
+%
+%However there is no simple analytical method for asserting robust performance for MIMO systems so we will have to resort to numerical methods \emph{\`a la Monte Carlo}.
+%One simple way to test for robust performance is to generate many perturbed plants and check that each one of them satisfies the performance specifications by superimposing the Bode plots of the singular values of the perturbed plants. More details on the topic can be found in \cite{SandP}
 
 
 \chapter{Hasegawa-Wakatani problem}
