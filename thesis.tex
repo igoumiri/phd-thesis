@@ -3928,30 +3928,45 @@ where $K_I$ be the gain of the integrator. More derivations can be found in \cit
 \subsubsection{Anti-windup design}
 A drawback of integral control is that if the actuator values are limited to some range as in our case, then the integrator can accumulate error when the actuator is ``saturated,'' resulting in poor transient performance, a phenomenon known as ``integrator windup.'' 
 
-Using a standard anti-windup scheme (see, e.g., \cite{AandM, Lewis}), in which one feeds back the difference between the desired value of~$u$ and its actual (possibly saturated) value will eliminate this effect.  
+We use a standard anti-windup scheme (see, e.g., \cite{AandM, Lewis}), in which one feeds back the difference between the desired value of~$u$ and its actual (possibly saturated) value to eliminate this effect.
 
 \subsection{Study of robustness in stability and performance}
 
-Although our closed-loop system is stable in theory, multiple factors could make it unstable in practice, or adversely affect its performance.
-Because of the lack of data for NSTX-U, our model relies heavily on data from NSTX experiments.
-It might be inaccurate, might be missing dynamics, or some of the parameters might be off.
-These inaccuracies are referred as \emph{model uncertainty}.
+% Nominal
+We want to control system (\ref{sc-space1}--\ref{sc-space2}) to be able to reach desired rotation profiles and stored energy (this is the role of the feedforward part of the controller) with good performance (this is the role of the feedback part of the controller) given the constraints we have on the actuators while ensuring closed-loop stability.
+This would be an easy task in the absence of any actuator limitations as system (\ref{sc-space1}--\ref{sc-space2}) does not present any fundamental limitations for control, so in theory we could make the controller as fast as we want, at the expense of requiring huge actuator inputs.
+In practice, actuator saturation severely limits the possibilities for designing a controller exhibiting good performance, and saturation being a non-linear process, linear design tools cannot be used directly.
+So to design a controller with the best performance given these limitations, we start by ignoring actuator saturation and building a fast and robust controller, then we back off on the design until we get reasonable actuator inputs (they may saturate but only for a short time).
+This procedure ensures that we push performances near the top of what is achievable with the given actuator limitations.
+
+% Robustness
+Observer-based controllers, like Kalman filters, use an internal linear reduced-order model of the system which by its very nature cannot be 100\% accurate.
+Furthermore, because of the lack of data for NSTX-U, our model relies heavily on data from NSTX experiments so there is an increased risk that it might be inaccurate, that it might be missing some of the dynamics, or that some parameters might be off.
+These various inaccuracies, referred as \emph{model uncertainty}, might make the closed-loop system unstable or adversely affect its performance even though we designed the controller to be stable and fast.
 Fortunately it is possible to precisely describe this uncertainty, put proper bounds on it, and guarantee that our closed-loop system stays stable and meets all performance specifications in spite of it.
 
-In this section, we show how to represent system uncertainty resulting from parameter uncertainty and we ensure that the controller we designed offers robust stability and performance.
+% Plan
+In this section, we design a nominal controller and define performance specifications that should be maintained under uncertainty.
+Then we show how to represent system uncertainty resulting from parameter uncertainty and we ensure that the controller previously designed offers robust stability and performance.
+Finally we consider the effect of actuator saturation while designing a final controller that works well in practice.
 
-Our system (\ref{sc-space1}--\ref{sc-space2}) has multiple inputs and multiple outputs (MIMO) which makes the analysis slightly more complex than for Single Input Single Output (SISO) systems. In a MIMO system, each input may influence any or all outputs and each output may be influenced by any or all inputs.
-A first complication of working with a MIMO system compared to SISO systems is that all transfer functions are matrices and as such, multiplication is not commutative.
-One consequence is that common SISO transfer functions like the loop gain, the sensitivity, and the complementary sensitivity exist in two variants: input or output depending of the order of multiplication.
-Also, looking at one bode plot per input-output pair can quickly become unwieldy, so instead it is often convenient to look at Bode plots of the singular values of a transfer function matrix, which we do below.
-Furthermore, upper bounds for robustness and performance are often expressed in terms of the largest singular value $\bar\sigma(H)$ for a transfer function matrix $H$.
 
-So far our controller has had two degrees of freedom, that is, it has two inputs:
-a reference signal $y_d$ and the output from the system $y$.
-When studying stability, the key element is the loop gain $L$, which contains the feedback gains but not the feedforward gains.
-Thus we split our controller into two blocks corresponding respectively to the feedforward and feedback components,
-which we call $F$ and $K$ respectively, as illustrated on figure~\ref{fig:split_controller}.
-Note that these are different from the $F$ and $K$ transfer function matrices defined earlier.
+\paragraph{Nominal Stability and Performance}
+
+Designing a fast controller requires a good amount of trial and error in choosing the cost matrices of the LQR, the integrator and the Kalman filter.
+In general, to design a fast LQR, one can simply choose large costs on the outputs and the integrator, but one has to be careful not to introduce destabilizing oscillations.
+Since the model is uncertain, it is better to tune the Kalman filter to rely more on sensor measurements than on its internal model.
+The performance specifications are best expressed in terms of properties of the output sensitivity function $S_o$, in particular
+its bandwidth, often defined as the smallest frequency to be transmitted, for which higher values means faster responses but also a higher sensitivity to noise,
+its peak value, which should be small for greater stability (a peak of  less than 2, approximately 6\,dB, is considered good),
+and its attenuation at steady-state (or at the lowest frequency considered).
+Since the duration of a plasma discharge is a few seconds, we only consider frequencies above 1\,rad/s,
+and since we use a discrete-time controller (integrated into TRANSP), we only need to consider frequencies below the Nyquist frequency $\omega_N = \log(\pi/\Delta t)$\,rad/s where $\Delta t$ is our time step.
+To compute the sensitivity function, we need to split our controller into its \emph{feedback} and \emph{feedforward} parts, as shown in Figure~\ref{fig:split_controller}, since the feedforward is irrelevant to the sensitivity. Note that $F$ and $K$ in this section are different from the $F$ and $K$ defined above.
+We have
+\begin{equation}
+	S_o = (I + G K)^{-1}.
+\end{equation}
 
 \begin{figure}[htbp]
 	\centering
@@ -3975,70 +3990,30 @@ Note that these are different from the $F$ and $K$ transfer function matrices de
 	\label{fig:split_controller}
 \end{figure}
 
-Before introducing uncertainty, we need to ensure that our nominal closed-loop system is stable and define what we consider as satisfactory performance.
-Since our open loop system $G$ does not have right half plane poles and the Nyquist plot of $G$ does not encircle the $-1$ point, according to the Nyquist criterion, our closed-loop system is stable, so our controller does provide nominal stability.
-
-Performance is a trade-off between getting a fast response while tracking the reference signal $y_d$ and making sure that measurement noise and other disturbances are not amplified too much by the feedback loop.
-Fortunately, these disturbances enter the system at different points and sometimes at different frequencies than the reference signal.
-Since the duration of a plasma discharge is a few seconds, we only consider frequencies above 1\,rad/s,
-and since we use a discrete-time controller (integrated into TRANSP), we only need to consider frequencies below the Nyquist frequency $\omega_N = \log(\pi/\Delta t)$\,rad/s where $\Delta t$ is our time step.
-
-We consider the three sources of disturbances shown on Figure~\ref{fig:disturbances}: an input disturbance $d_u$ affecting the input of $G$, an output disturbance $d_y$ affecting the output of $G$, and sensor noise $n$ which does not directly affect the output of $G$ but enters the controller nevertheless.
+Ignoring actuator saturation, we can get very high theoretical performance by carefully assigning costs to the outputs and the integrator, and the weights of the Kalman filter. Figure~\ref{fig:best_So} shows the singular values of the output sensitivity function for a fast controller.
+The high bandwidth (above 100\,rad/s) guarantees a short rise time while the limited peak value (less than 2) provides a good stability margin.
 
 \begin{figure}[htbp]
 	\centering
-	\begin{tikzpicture}
-		\node (yd) {$y_d$};
-		\node[block, right=0.5 of yd] (F) {$F$};
-		\node[sum, right=0.6 of F] (sum u) {};
-		\node[above=0.4 of sum u] (du) {$d_u$};
-		\node[block, right=of sum u] (G) {$G$};
-		\node[sum, right=0.7 of G] (sum y) {};
-		\node[above=0.4 of sum y] (dy) {$d_y$};
-		\node[junction, right=0.4 of sum y] (out) {};
-		\node[right=0.5 of out] (y) {$y$};
-		\node[block, below=0.4 of G] (K) {$K$};
-		\node[sum] (sum n) at (K-|out) {};
-		\node[right=0.5 of sum n] (n) {$n$};
-		
-		\draw[connector] (yd) to (F);
-		\draw[connector] (F) to (sum u);
-		\draw[connector] (du) to (sum u);
-		\draw[connector] (sum u) to node[above] {$u$} (G);
-		\draw[connector] (G) to (sum y);
-		\draw[connector] (dy) to (sum y);
-		\draw[connector] (sum y) to (out) to (y);
-		\draw[connector] (out) to (sum n);
-		\draw[connector] (n) to (sum n);
-		\draw[connector] (sum n) to (K);
-		\draw[connector] (K) -| node[right, pos=0.98] {$\scriptstyle -$} (sum u);
-	\end{tikzpicture}
-	\caption{Input disturbance $d_u$, output disturbance $d_y$, and sensor noise $n$.}
-	\label{fig:disturbances}
+	\includegraphics{chap10/best_So}
+	\caption{Singular values of output sensitivity function for a fast controller designed ignoring actuator saturation.
+		The dark blue line highlights the largest singular value.
+		The red line is the upper bound corresponding to the performance specifications.
+		The bandwidth is larger than 100\,rad/s, the peak is smaller than 6\,dB, and the attenuation at low frequencies is more than 40\,dB.
+	}
+	\label{fig:best_So}
 \end{figure}
 
-We define nominal performance by choosing upper bounds on the transfer functions from these disturbance inputs to either the output $y$ (or equivalently, to the error $e = y - y_d$) or to the input $u$.
-There are two important aspects to consider when choosing the bounds.
-The \emph{static} aspect is given by the \emph{peaks} (maximum values) which are related to the quality of the response.
-The \emph{dynamic} aspect is given by the \emph{bandwidth frequency} which is related to the speed of the response.
-In general, a large bandwidth means better performance since high frequency signals are more easily passed on to the outputs, so the rise time is improved, but it also indicates a system which is sensitive to noise and model uncertainties.
+We use this nominal controller as our reference for choosing performance specifications that must be met in the face of uncertainty.
+It is standard to encode these specifications in a weight $W_P$ whose inverse forms an upper bound to the sensitivity function of the system.
+For simplicity we choose $W_P$ diagonal with all diagonal elements equal to the inverse of the upper bound of the largest singular value of the sensitivity function.
+The specifications are as follows: the bandwidth must be larger than 50\,rad/s with a -20\,dB/decade roll-off, and the peak of sensitivity must be less than 2 (6\,dB).
+The corresponding upper bound for the sensitivity function is shown in red on Figure~\ref{fig:best_So}.
+The closed-loop system formed using our nominal controller is stable and meets these specifications so we can now address robustness.
 
-The five distinct transfer functions of interest are shown in the matrix below:
-\begin{equation}
-	\renewcommand\arraystretch{0.8}
-	\begin{bmatrix} y \\ u \end{bmatrix} =
-	\begin{pmatrix} S_o G & S_o & -To \\ S_i & S_i K & S_i K \end{pmatrix}
-	\begin{bmatrix} d_u \\ d_y \\ n \end{bmatrix}
-\end{equation}
-where $S_o = (I + G K)^{-1}$ is the output sensitivity, $T_o = (I + G K)^{-1} G K = S_o G K$ is the output complementary sensitivity, and $S_i = (I + K G)^{-1}$ is the input sensitivity.
 
-The sensitivity (both input and output) is of particular importance since it is a factor in most of these transfer functions (note that $S_o G = G S_i$ and $S_i K = K S_o$).
-For both $S_o$ and $S_i$, we choose the upper bound such as to guarantee a bandwidth of 25\,Hz and a maximum peak of 1.9 (which guarantees a stability margin of 0.53).
-In the control literature, a maximum peak sensitivity of 2 or less is considered good for most intents and purposes.
-We also want the output complimentary sensitivity to start rolling off at 200\,Hz maximum, have a maximum 20\% amplification at low frequencies.
-We want $S_o G$ to roll-off at no more than 50\,Hz and have at least a 14\,dB attenuation.
-To limit actuator use, we want $S_i K$ to have a bandwidth of at least 10\,Hz and no more than 40\,dB amplification.
-All the bounds can be seen on Figure~\ref{fig:robust_performance}.
+
+\paragraph{Robust Stability and Performance}
 
 Next we want to introduce perturbations in our system.
 Without data from NSTX-U, we choose to introduce parameter uncertainty.
@@ -4046,18 +4021,19 @@ The two parameters that are most likely to be varying significantly from their n
 Let $\bar{\chi}_\phi$ be the nominal value (which depends on the radial variable $\rho$) of $\chi_\phi$, and
 let $\bar{\tau}_E$ be the nominal value of $\tau_E$.
 We assume that the perturbed model $G_p$ is built from perturbed values of the parameters ${\chi_\phi}_p$ and ${\tau_E}_p$, where
-${\chi_\phi}_p$ is a random perturbation of bounded magnitude around $\bar{\chi}_\phi$ generated using 1D Perlin noise, with bounds $0.9 \bar{\chi}_\phi$ and $1.1 \bar{\chi}_\phi$, and ${\tau_E}_p = \mu \cdot \bar{\tau}_E$ with $\mu \in [0.9,1.1]$.
+${\chi_\phi}_p$ is a random perturbation of bounded magnitude around $\bar{\chi}_\phi$ generated using 1D Perlin noise, and ${\tau_E}_p = \mu \cdot \bar{\tau}_E$ for some $\mu$.
 Let $\Pi$ be the set containing all such perturbed versions of our nominal model $G$.
 Robust stability (resp. performance) is obtained when all plants in $\Pi$ are stable (resp. performant).
+
+In order not to arbitrarily restrict the allowable magnitude of the perturbations, we start with a large range of allowed perturbations and progressively restrict the range until we get robust stability and performance.
 
 To greatly simplify the analysis while being strictly conservative about stability and performance, we will use a \emph{norm-bounded} description of uncertainty where $\Pi$ is allowed to contain $\mathcal{H}_\infty$ norm-bounded perturbations of our nominal model $G$.
 To determine the best way to integrate this uncertainty into our model, we superimpose the Nyquist plots of many perturbed plants and we observe that right multiplicative uncertainty adequately represents the pattern we obtain.
 Thus we write
 \begin{equation} \label{eq:multiplicative}
-	G_p = G (I + W_1 \Delta W_2),
+	G_p = G (I + \Delta W),
 \end{equation}
-where $W_1$ and $W_2$ are weighting transfer function matrices, and $\Delta$ satisfies $\|\Delta\|_\infty < 1$.
-For simplicity, $W_1$ is taken to be the identity matrix.
+where $W$ is a weighting transfer function matrix, and $\Delta$ satisfies $\|\Delta\|_\infty < 1$.
 A block diagram of the perturbed plant is shown in Figure~\ref{fig:multiplicative}.
 
 \begin{figure}[htbp]
@@ -4065,33 +4041,28 @@ A block diagram of the perturbed plant is shown in Figure~\ref{fig:multiplicativ
 	\begin{tikzpicture}
 		\node (u) {$u$};
 		\node[junction, right=0.5 of u] (in) {};
-		\node[coordinate, right=1 of in] (below W2) {};
-		\node[block, above=0.5 of below W2] (W2) {$W_2$};
-		\node[coordinate, right=1.7 of below W2] (below Delta) {};
+		\node[coordinate, right=1 of in] (below W) {};
+		\node[block, above=0.5 of below W] (W) {$W$};
+		\node[coordinate, right=1.7 of below W] (below Delta) {};
 		\node[block, above=0.5 of below Delta] (Delta) {$\Delta$};
-		\node[coordinate, right=1.7 of below Delta] (below W1) {};
-		\node[block, above=0.5 of below W1] (W1) {$W_1$};
-		\node[sum, right=0.9 of below W1] (sum) {};
+		\node[sum, right=0.9 of below Delta] (sum) {};
 		\node[block, right=0.5 of sum] (G) {$G$};
 		\node[right=0.5 of G] (y) {$y$};
 		
 		\draw[connector] (u) to (in) to (sum);
 		\draw[connector] (sum) to (G);
-		\draw[connector] (in) |- (W2);
-		\draw[connector] (W2) to (Delta);
-		\draw[connector] (Delta) to (W1);
-		\draw[connector] (W1) -| (sum);
+		\draw[connector] (in) |- (W);
+		\draw[connector] (W) to (Delta);
+		\draw[connector] (Delta) -| (sum);
 		\draw[connector] (G) to (y);
 	\end{tikzpicture}
-	\caption{Perturbed model $G_p = G (I + W_1 \Delta W_2)$}
+	\caption{Perturbed model $G_p = G (I + \Delta W)$}
 	\label{fig:multiplicative}
 \end{figure}
 
-To find $W_2$, we first observe that $\Delta W_2 = G^{-1}{G_p} - I$.
-Thus we can superimpose the Bode plots of $G^{-1}{G_p} - I$ for many perturbed plants and choose a low-order upper bound which will prescribe $W_2$.
-Note that $G^{-1}{G_p} - I$ and $W_2$ are matrices so we must find upper bounds for each element.
-
-
+To find $W$, we first observe that $\Delta W = G^{-1}{G_p} - I$.
+Thus we can superimpose the Bode plots of $G^{-1}{G_p} - I$ for many perturbed plants and choose a low-order upper bound which will prescribe $W$.
+Note that $G^{-1}{G_p} - I$ and $W$ are matrices so we must find upper bounds for each element.
 
 \begin{figure}
 	\centering
@@ -4101,26 +4072,23 @@ Note that $G^{-1}{G_p} - I$ and $W_2$ are matrices so we must find upper bounds 
 
 		\node[sum] (sum) {};
 		\node[junction, right=0.5 of sum] (in) {};
-		\node[coordinate, right=of in] (below W2) {};
-		\node[block, above=0.4 of below W2] (W2) {$W_2$};
-		\node[coordinate, right=2 of below W2] (below Delta) {};
+		\node[coordinate, right=of in] (below W) {};
+		\node[block, above=0.4 of below W] (W) {$W$};
+		\node[coordinate, right=2 of below W] (below Delta) {};
 		\node[block, above=0.4 of below Delta] (Delta) {$\Delta$};
-		\node[coordinate, right=2 of below Delta] (below W1) {};
-		\node[block, above=0.4 of below W1] (W1) {$W_1$};
-		\node[sum, right=of below W1] (out) {};
+		\node[sum, right=of below Delta] (out) {};
 		\node[block, right=0.5 of out] (G) {$G$};
 		\node[coordinate, right=0.5 of G] (end) {};
 		\node[coordinate] (above K) at ($(sum)!0.5!(end)$) {};
 		\node[block, below=0.6 of above K] (K) {$K$};
 		
-		\draw[connector] (sum) to (in) to (below W2) to (below Delta) to (below W1) to (out) to (G);
+		\draw[connector] (sum) to (in) to (below W) to (below Delta) to (out) to (G);
 		\draw[connector] (G) to (end) |- (K);
 		\draw[connector] (K) -| node[right, pos=0.98] {$\scriptstyle -$} (sum);
 		
-		\draw[connector] (in) |- (W2);
-		\draw[connector] (W2) to node[above] {$u_\Delta$} (Delta);
-		\draw[connector] (Delta) to node[above] {$y_\Delta$} (W1);
-		\draw[connector] (W1) -| (out);
+		\draw[connector] (in) |- (W);
+		\draw[connector] (W) to node[above] {$u_\Delta$} (Delta);
+		\draw[connector] (Delta) -| node[above] {$y_\Delta$} (out);
 	\end{tikzpicture}
 	\begin{tikzpicture}
 		\node[font=\large\bfseries] at (-2,0.5) {b)};
@@ -4143,10 +4111,11 @@ Note that $G^{-1}{G_p} - I$ and $W_2$ are matrices so we must find upper bounds 
 Now equipped with a mathematical description of our perturbed system, we can address robust stability.
 Using block diagram algebra, we start by rearranging our system of Figure~\ref{fig:diagram_perturb}a into the $M \Delta$ configuration of Figure~\ref{fig:diagram_perturb}b to obtain the transfer function block matrix $M$:
 \begin{equation}
-	M = -W_2 K S_o G W1.
+	M = -W K S_o G.
 \end{equation}
 
-Since our nominal closed-loop system is stable and since the largest singular value of $M$ is less than 1 for all frequencies (Figure~\ref{fig:robust_stability}), by theorem 8.4 of~\cite{SandP}, our closed-loop system is robustly stable.
+When the nominal closed-loop system is stable and when the largest singular value of $M$ is less than 1 for all frequencies, by theorem 8.4 of~\cite{SandP} (small-gain theorem), the closed-loop system is robustly stable.
+We found that we could achieve robust stability for perturbations obtained from up to 10\% variations of the nominal parameters (Figure~\ref{fig:robust_stability}).
 
 \begin{figure}[htbp]
 	\centering
@@ -4156,23 +4125,47 @@ Since our nominal closed-loop system is stable and since the largest singular va
 \end{figure}
 
 
-To test for robust performance, we generate many perturbed plants and check that each one of them satisfies the performance specifications by superimposing the Bode plots of the singular values of the perturbed plants (Figure~\ref{fig:robust_performance}).
+To test for robust performance, we generate many perturbed plants and check that each one of them satisfies the performance specifications by superimposing the Bode plots of the largest singular value of all perturbed plants (Figure~\ref{fig:robust_performance}).
 We verify that our controller has robust performance for the set of perturbed plants and the specifications stated above.
 
 \begin{figure}[htbp]
-	%\centering
-	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_So}%
-	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_To}
-	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_Si}%
-	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_SoG}
-	\includegraphics[width=0.5\linewidth]{chap10/robust_performance_SiK}
+	\centering
+	\includegraphics{chap10/robust_performance}
 	\caption{Robust performance.
 		The singular values of the transfer functions of 256 perturbed plants are shown superimposed in blue.
-		All perturbed transfer functions meet the performance specifications indicated by their upper bound in red.}
+		All perturbed transfer functions meet the performance specifications indicated by the upper bound in red.}
 	\label{fig:robust_performance}
 \end{figure}
 
 
+\paragraph{Actuator saturation}
+
+The controller studied above is fast at the expense of requiring large input values of flipping signs which are completely unrealistic in practice.
+Introducing actuator saturation without otherwise modifying the controller does not work as the large and oscillatory requested input values drive the saturated input values to alternate between their high and low bounds which is particularly ineffective at controlling the system.
+So instead we progressively reduced the weights assigned to the cost function until the input values get within reasonable bounds such that saturation only occurs for short durations, which allows us to obtain the best controller we can design in practice.
+Note that since the saturation process is non-linear, we can no longer rely on linear control design tools like putting an upper bound on the sensitivity function for specifying performance specifications so we have to rely on time responses of the closed-loop system.
+The closed-loop system exhibits a fast response time for sensor measurements (Figure~\ref{fig:good_y_sat}) while only saturating the inputs for a short time after a command is received (Figure~\ref{fig:good_u_sat}).
+However, the time response for the stored energy is slower than for the rotation measurements and the target is not perfectly reached.
+This is a design choice made to improve the tracking of the rotation at the expense of the stored energy.
+Indeed, equation~\eqref{energy} imposes a trade-off between the stored energy and the beam powers by removing a degree of freedom making it very hard to simultaneously and efficiently track both the rotation and the energy.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics{chap10/good_y_sat_sensors}
+	\includegraphics{chap10/good_y_sat_energy}
+	\caption{Rotation measurements and stored energy over time while tracking a target with actuator saturation and a controller designed to account for it.
+		By design, the response is slower for the stored energy and the target is not perfectly reached.}
+	\label{fig:good_y_sat}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics{chap10/good_u_sat_current}
+	\includegraphics{chap10/good_u_sat_beams}
+	\caption{Coil current and NBI power over time while tracking a target with actuator saturation and a controller designed to account for it.
+		Saturation only occurs for short periods during the transient.}
+	\label{fig:good_u_sat}
+\end{figure}
 
 
 \section{Simulation results} 
