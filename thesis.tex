@@ -1347,7 +1347,9 @@ We therefore used numerical simulations generated using the TRANSP code~\cite{Bu
 When we started focusing on the upgraded device NSTX-U, the device was not ready for rotation testing yet, so we chose to keep using the TRANSP upgraded models as our control objective.
 For NSTX-U rotation control, beside of the toroidal rotation we added another controllable parameter; the total stored energy, that wasn't included in the NSTX work. 
 
-We are going to present the results of modeling and control for both devices, NSTX and NSTX-U, while highlighting the main differences for each one.
+
+We are going to present the results of modeling and control for both devices, NSTX and NSTX-U, while highlighting the main differences for each one. More details and results can be found  for NSTX in chapter~\ref{rot1&} and NSTX-U in chapter~\ref{rot2&}. 
+
 
 \section{Modeling of the plasma rotation}
 
@@ -1552,7 +1554,7 @@ In these calculations, the $n_i$, $n_e$, and $T_i$ profiles are taken from the T
 
 \section{Results on control}
 
-In this section, results of the application of the reduced order model based compensator detailed in Chapter~\ref{chapitre2} on the momentum equation (Reduced and TRANSP models) are shown for both the NSTX and NSTX-U devices.
+In this section, results of the application of the reduced order model based compensator detailed in Chapter~\ref{rot1&} on the momentum equation (Reduced and TRANSP models) are shown for both the NSTX and NSTX-U devices.
 
 Because the controllers will be applied on real time experiments, they have to be discretized. The discretization is not explicitly expanded in the background chapter~\ref{chapitre2} but can be found in details in any control reference book \cite{AandM, SandP}.
 
@@ -1875,7 +1877,7 @@ Generally, broader toroidal rotation profile brings more stability to the plasma
 
 While only the n = 3 applied field configuration was considered for the NTV actuator, it is possible to include different applied field spectra which can change the NTV torque profile. For example, an n = 1 field configuration can allow a deeper penetration of this torque profile which will expand the capability of rotation control. Another NTV upgrade is programmed on NSTX-U and this would enable more NTV (drag) actuators along the plasma so more refined control but more plasma complexity as some actuators might fight each others to reach their targeted values.
 
-The NSTX controllers were designed using models tuned to match experimental data. To solve the NSTX-U rotation control problem, control-oriented models were developed directly from simulations. The capability to build purely model-based controllers has a large impact: fewer experiments are needed to calibrate the models/controllers, and more importantly, it enables us to predict actuator requirements (e.g., amplitude, bandwidth, latency), and any inherent performance limitations for future machines such as FNSF. These control-oriented models such as those being developed using TRANSP extrapolations for NSTX-U have been tested for their robustness in producing a greater range of target profile shapes and their results were satisfactory allowing good flexibility in parameters uncertainties while allowing to reach the rotation and stored energy tracking goals.
+The NSTX controllers were designed using models tuned to match experimental data. To solve the NSTX-U rotation control problem, control-oriented models were developed directly from simulations. The capability to build purely model-based controllers has a large impact: fewer experiments are needed to calibrate the models/controllers, and more importantly, it enables us to predict actuator requirements (e.g., amplitude, bandwidth, latency), and any inherent performance limitations for future machines such as FNSF. These control-oriented models such as those being developed using TRANSP extrapolations for NSTX-U have been tested for their robustness in producing a greater range of target profile shapes and their results were satisfactory in practice allowing good flexibility in parameters uncertainties while allowing to reach the rotation and stored energy tracking goals.
 
 
 \chapter{Conclusion and future work}
